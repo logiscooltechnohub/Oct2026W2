@@ -47,6 +47,8 @@ input[type=range]{flex:1;accent-color:var(--orange);min-width:0}
 .th.on{border-color:#ffd23f;box-shadow:0 0 0 3px var(--orange)}
 .th i{position:absolute;left:3px;top:0;font:800 11px "Baloo 2";font-style:normal;color:#fff;text-shadow:1px 1px #000}
 .fb{display:flex;gap:6px;flex-wrap:wrap;max-width:300px}
+.tip{position:fixed;left:0;top:0;z-index:99;max-width:250px;background:#fff8ec;color:#2a1020;border:3px solid #2a1020;border-radius:14px;padding:6px 11px;font:700 14px/1.3 "Baloo 2",sans-serif;box-shadow:0 3px 0 #2a1020;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+.tip.show{opacity:1;transform:none}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);background:#ffd23f;color:var(--deep);border:3px solid var(--deep);border-radius:999px;padding:6px 18px;font-weight:800;opacity:0;transition:.3s;pointer-events:none}
 .toast.show{transform:translate(-50%,0);opacity:1}
 @media(max-width:860px){html,body{overflow:auto}.app{height:auto}.hint{display:none}.mid{grid-template-columns:1fr}.stagebox{order:1;height:min(94vw,60vh)}.col{order:2;overflow:visible}.col.r{order:3}.frames{flex-wrap:wrap}.fb{max-width:none}}
@@ -59,9 +61,9 @@ input[type=range]{flex:1;accent-color:var(--orange);min-width:0}
 <main class="mid">
  <aside class="tile col">
   <div class="h">Công cụ</div>
-  <div class="row"><button class="tb" data-t="pen" title="B">✏️ Bút</button><button class="tb" data-t="erase" title="E">🧽 Tẩy</button><button class="tb" data-t="fill" title="G">🪣 Đổ màu</button><button class="tb" data-t="pick" title="I">💧 Lấy màu</button></div>
-  <div class="row"><button class="tb" id="mir">🪞 Đối xứng</button><button class="tb" id="grd">▦ Lưới</button><button class="tb" id="oni">👻 Khung trước</button></div>
-  <div class="row"><button class="tb" id="und">↶ Hoàn tác</button><button class="tb" id="red">↷ Làm lại</button></div>
+  <div class="row"><button class="tb" data-t="pen">Bút</button><button class="tb" data-t="erase">Tẩy</button><button class="tb" data-t="fill">Đổ màu</button><button class="tb" data-t="pick">Lấy màu</button></div>
+  <div class="row"><button class="tb" id="mir">Đối xứng</button><button class="tb" id="grd">Lưới</button><button class="tb" id="oni">Khung trước</button></div>
+  <div class="row"><button class="tb" id="und">Hoàn tác</button><button class="tb" id="red">Làm lại</button></div>
   <div class="h">Màu sắc</div>
   <div class="pal" id="pal"></div>
   <input type="color" id="cc" value="#f26a12" aria-label="Chọn màu tuỳ ý">
@@ -72,20 +74,20 @@ input[type=range]{flex:1;accent-color:var(--orange);min-width:0}
  <aside class="tile col r">
   <div class="h">Xem trước</div>
   <div class="pvw ck"><canvas id="pv"></canvas></div>
-  <div class="row"><button class="tb go" id="play">⏸ Dừng</button></div>
+  <div class="row"><button class="tb go" id="play">Dừng</button></div>
   <label class="lbl">Tốc độ <input type="range" id="fps" min="1" max="24" value="8"> <b id="fl">8</b></label>
   <label class="lbl">Khung vẽ <select id="size"><option>16</option><option selected>32</option><option>48</option><option>64</option></select></label>
-  <div class="row"><button class="tb" id="imp">🖼️ Nhập ảnh quái vật</button><button class="tb" id="clr">🗑️ Xoá khung này</button></div>
+  <div class="row"><button class="tb" id="imp">Nhập ảnh quái vật</button><button class="tb" id="clr">Xoá khung này</button></div>
   <input type="file" id="file" accept="image/*" hidden>
   <div class="h">Xuất GIF</div>
   <label class="lbl">Kích thước <select id="sc"><option value="2">x2</option><option value="4">x4</option><option value="8" selected>x8</option></select></label>
-  <button class="tb go" id="exp">🎃 Tải GIF về máy</button>
+  <button class="tb go" id="exp">Tải GIF về máy</button>
  </aside>
 </main>
 
 <footer class="tile frames">
  <div class="strip" id="strip"></div>
- <div class="fb"><button class="tb" id="add">➕ Khung mới</button><button class="tb" id="dup">⧉ Nhân bản</button><button class="tb" id="lf" aria-label="Dời khung sang trái">◀</button><button class="tb" id="rt" aria-label="Dời khung sang phải">▶</button><button class="tb" id="del">🗑️ Xoá khung</button></div>
+ <div class="fb"><button class="tb" id="add">Khung mới</button><button class="tb" id="dup">Nhân bản</button><button class="tb" id="lf" aria-label="Dời khung sang trái">Trái</button><button class="tb" id="rt" aria-label="Dời khung sang phải">Phải</button><button class="tb" id="del">Xoá khung</button></div>
 </footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
@@ -118,8 +120,8 @@ function restore(h){frames=h.f;cur=h.c;refresh();save()}
 function drawTo(ctx,f,a){off.width=off.height=W;off.getContext('2d').putImageData(new ImageData(f,W,W),0,0);ctx.globalAlpha=a;ctx.drawImage(off,0,0);ctx.globalAlpha=1}
 function draw(){cx.clearRect(0,0,W,W);if(onion&&cur>0)drawTo(cx,frames[cur-1],.3);drawTo(cx,frames[cur],1)}
 function drawPv(){if(pv.width!==W)pv.width=pv.height=W;px.clearRect(0,0,W,W);drawTo(px,frames[pi%frames.length],1)}
-function thumbs(){const s=$('#strip');s.replaceChildren();frames.forEach((f,i)=>{const b=document.createElement('button'),c=document.createElement('canvas');b.className='th ck'+(i===cur?' on':'');b.setAttribute('aria-label','Khung '+(i+1));c.width=c.height=W;drawTo(c.getContext('2d'),f,1);const n=document.createElement('i');n.textContent=i+1;b.append(c,n);b.onclick=()=>{cur=i;refresh()};s.appendChild(b)});const o=s.querySelector('.on');if(o)o.scrollIntoView({block:'nearest',inline:'nearest'})}
-function ui(){document.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===tool));$('#mir').classList.toggle('on',mirror);$('#oni').classList.toggle('on',onion);$('#grd').classList.toggle('on',!board.classList.contains('ng'));$('#und').disabled=!hist.length;$('#red').disabled=!redo.length;$('#play').textContent=playing?'⏸ Dừng':'▶ Phát';$('#fl').textContent=fps;$('#fps').value=fps;$('#del').disabled=frames.length<2;document.querySelectorAll('.sw').forEach(s=>s.classList.toggle('on',s.dataset.c===color));$('#cc').value=color}
+function thumbs(){const s=$('#strip');s.replaceChildren();frames.forEach((f,i)=>{const b=document.createElement('button'),c=document.createElement('canvas');b.className='th ck'+(i===cur?' on':'');b.dataset.tip='Khung '+(i+1)+': bấm để chỉnh sửa khung này';b.setAttribute('aria-label','Khung '+(i+1));c.width=c.height=W;drawTo(c.getContext('2d'),f,1);const n=document.createElement('i');n.textContent=i+1;b.append(c,n);b.onclick=()=>{cur=i;refresh()};s.appendChild(b)});const o=s.querySelector('.on');if(o)o.scrollIntoView({block:'nearest',inline:'nearest'})}
+function ui(){document.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===tool));$('#mir').classList.toggle('on',mirror);$('#oni').classList.toggle('on',onion);$('#grd').classList.toggle('on',!board.classList.contains('ng'));$('#und').disabled=!hist.length;$('#red').disabled=!redo.length;$('#play').textContent=playing?'Dừng':'Phát';$('#fl').textContent=fps;$('#fps').value=fps;$('#del').disabled=frames.length<2;document.querySelectorAll('.sw').forEach(s=>s.classList.toggle('on',s.dataset.c===color));$('#cc').value=color}
 function refresh(){draw();thumbs();ui()}
 function setSize(){cv.width=cv.height=W;board.style.setProperty('--n',W);$('#size').value=W}
 function setColor(h){color=h;if(tool==='erase'||tool==='pick')tool='pen';ui()}
@@ -183,8 +185,8 @@ $('#play').onclick=()=>{playing=!playing;ui()};
 $('#fps').oninput=e=>{fps=+e.target.value;ui();save()};
 $('#size').onchange=e=>{const v=+e.target.value;if(!confirm('Đổi kích thước khung vẽ sẽ xoá bản vẽ hiện tại. Tiếp tục?')){e.target.value=W;return}W=v;frames=[blank()];cur=0;hist=[];redo=[];setSize();refresh();save()};
 $('#imp').onclick=()=>$('#file').click();
-$('#file').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=W;const t=c.getContext('2d');t.imageSmoothingEnabled=false;const k=Math.min(W/im.width,W/im.height),w=Math.max(1,Math.round(im.width*k)),h=Math.max(1,Math.round(im.height*k));t.drawImage(im,(W-w)>>1,(W-h)>>1,w,h);const d=t.getImageData(0,0,W,W).data;snap();const fr=frames[cur];for(let i=0;i<d.length;i+=4){const a=d[i+3]>=128;fr[i]=a?d[i]:0;fr[i+1]=a?d[i+1]:0;fr[i+2]=a?d[i+2]:0;fr[i+3]=a?255:0}URL.revokeObjectURL(im.src);refresh();save();toast('Đã nhập ảnh! 👾')};im.onerror=()=>toast('Không mở được ảnh này');im.src=URL.createObjectURL(f)};
-$('#exp').onclick=()=>{const b=$('#exp');b.disabled=true;toast('Đang tạo GIF...');setTimeout(()=>{try{const u=gif(frames,W,+$('#sc').value,fps),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([u],{type:'image/gif'}));a.download='pixel-monster.gif';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);toast('Đã tải GIF về máy! 🎃')}catch(e){toast('Xuất GIF bị lỗi, thử lại nhé')}b.disabled=false},40)};
+$('#file').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=W;const t=c.getContext('2d');t.imageSmoothingEnabled=false;const k=Math.min(W/im.width,W/im.height),w=Math.max(1,Math.round(im.width*k)),h=Math.max(1,Math.round(im.height*k));t.drawImage(im,(W-w)>>1,(W-h)>>1,w,h);const d=t.getImageData(0,0,W,W).data;snap();const fr=frames[cur];for(let i=0;i<d.length;i+=4){const a=d[i+3]>=128;fr[i]=a?d[i]:0;fr[i+1]=a?d[i+1]:0;fr[i+2]=a?d[i+2]:0;fr[i+3]=a?255:0}URL.revokeObjectURL(im.src);refresh();save();toast('Đã nhập ảnh!')};im.onerror=()=>toast('Không mở được ảnh này');im.src=URL.createObjectURL(f)};
+$('#exp').onclick=()=>{const b=$('#exp');b.disabled=true;toast('Đang tạo GIF...');setTimeout(()=>{try{const u=gif(frames,W,+$('#sc').value,fps),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([u],{type:'image/gif'}));a.download='pixel-monster.gif';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);toast('Đã tải GIF về máy!')}catch(e){toast('Xuất GIF bị lỗi, thử lại nhé')}b.disabled=false},40)};
 addEventListener('keydown',e=>{if(/INPUT|SELECT/.test(e.target.tagName)&&e.target.type!=='range')return;const k=e.key.toLowerCase();
  if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();(e.shiftKey?$('#red'):$('#und')).click();return}
  if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();$('#red').click();return}
@@ -193,6 +195,14 @@ addEventListener('keydown',e=>{if(/INPUT|SELECT/.test(e.target.tagName)&&e.targe
  else if(k===' '&&e.target.tagName!=='BUTTON'){e.preventDefault();$('#play').click()}
  else if(k==='arrowleft'&&cur>0){cur--;refresh()}else if(k==='arrowright'&&cur<frames.length-1){cur++;refresh()}});
 
+const tip=document.createElement('div');tip.className='tip';tip.setAttribute('role','tooltip');document.body.appendChild(tip);let tt;
+const hideTip=()=>tip.classList.remove('show');
+function showTip(el){tip.textContent=el.dataset.tip;tip.classList.add('show');const r=el.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;let y=r.top-h-10;if(y<6)y=r.bottom+10;tip.style.left=Math.min(Math.max(6,r.left+r.width/2-w/2),innerWidth-w-6)+'px';tip.style.top=y+'px';clearTimeout(tt);tt=setTimeout(hideTip,6000)}
+const onTip=e=>{const el=e.target.closest&&e.target.closest('[data-tip]');el?showTip(el):hideTip()};
+document.addEventListener('mouseover',onTip);document.addEventListener('focusin',onTip);document.addEventListener('focusout',hideTip);document.addEventListener('pointerdown',e=>{if(e.target.id==='cv')hideTip()});
+const TIPS={"[data-t=pen]": "Bút: bấm hoặc kéo chuột để tô từng ô pixel. (phím B)", "[data-t=erase]": "Tẩy: xoá pixel để thấy lại nền caro. (phím E)", "[data-t=fill]": "Đổ màu: tô đầy cả một vùng chỉ với một cú bấm. (phím G)", "[data-t=pick]": "Lấy màu: bấm vào một pixel để chọn đúng màu đó. (phím I)", "#mir": "Đối xứng: bạn vẽ bên trái, bên phải tự vẽ theo. Rất hợp để vẽ quái vật!", "#grd": "Lưới: bật hoặc tắt các đường kẻ ô để dễ đếm pixel.", "#oni": "Khung trước: hiện mờ khung hình trước đó để biết quái vật cần nhúc nhích bao nhiêu.", "#und": "Hoàn tác: quay lại một bước. (Ctrl+Z)", "#red": "Làm lại: lấy lại bước vừa hoàn tác. (Ctrl+Y)", "#cc": "Chọn bất kỳ màu nào bạn thích!", "#play": "Phát / Dừng: xem quái vật cử động. (phím Space)", "#fps": "Tốc độ: số khung hình chạy mỗi giây. Càng cao thì quái vật càng nhanh.", "#size": "Khung vẽ: càng nhiều ô thì càng chi tiết. Đổi kích thước sẽ xoá bản vẽ!", "#imp": "Nhập ảnh quái vật Week 1 của bạn vào khung này để làm nhân vật.", "#clr": "Xoá sạch khung đang chọn. Bấm nhầm thì Hoàn tác được.", "#sc": "Kích thước ảnh GIF: x8 to và rõ nhất.", "#exp": "Tải ảnh động GIF về máy. Cần ít nhất 2 khung để quái vật cử động!", "#add": "Khung mới: thêm một khung trống ngay sau khung đang chọn.", "#dup": "Nhân bản: copy khung này, rồi chỉnh vài pixel để tạo chuyển động.", "#lf": "Dời khung đang chọn sang trái để đổi thứ tự.", "#rt": "Dời khung đang chọn sang phải để đổi thứ tự.", "#del": "Xoá khung đang chọn.", ".pvw": "Đây là ảnh động của bạn, lặp lại mãi mãi!", "#strip": "Các khung hình của ảnh động, chạy từ trái sang phải."};
+for(const[s,v]of Object.entries(TIPS)){const el=document.querySelector(s);if(el)el.dataset.tip=v}
+document.querySelectorAll('.sw').forEach(s=>s.dataset.tip='Chọn màu này');
 /* ---------- start ---------- */
 load();if(!frames.length)frames=[blank()];setSize();refresh();
 (function tick(){pi=playing?(pi+1)%frames.length:cur;drawPv();setTimeout(tick,1000/fps)})();
